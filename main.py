@@ -18,7 +18,11 @@ gemini_api_key = os.getenv("GEMINI_API_KEY", "")
 
 
 assert gemini_model, "Error: GEMINI_MODEL cannot be empty. Update .env"
-assert gemini_api_key, "Error: GEMINI_API_KEY cannot be empty. Update .env"
+use_vertex = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").lower() in ("1", "true")
+# Vertex AI 利用時は API キーの代わりに gcloud の認証情報を使う
+assert use_vertex or gemini_api_key, (
+    "Error: GEMINI_API_KEY cannot be empty. Update .env"
+)
 
 
 async def main():
