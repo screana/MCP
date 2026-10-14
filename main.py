@@ -5,26 +5,24 @@ from dotenv import load_dotenv
 from contextlib import AsyncExitStack
 
 from mcp_client import MCPClient
-from core.claude import Claude
+from core.gemini import Gemini
 
 from core.cli_chat import CliChat
 from core.cli import CliApp
 
 load_dotenv()
 
-# Anthropic Config
-claude_model = os.getenv("CLAUDE_MODEL", "")
-anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
+# Gemini Config
+gemini_model = os.getenv("GEMINI_MODEL", "")
+gemini_api_key = os.getenv("GEMINI_API_KEY", "")
 
 
-assert claude_model, "Error: CLAUDE_MODEL cannot be empty. Update .env"
-assert anthropic_api_key, (
-    "Error: ANTHROPIC_API_KEY cannot be empty. Update .env"
-)
+assert gemini_model, "Error: GEMINI_MODEL cannot be empty. Update .env"
+assert gemini_api_key, "Error: GEMINI_API_KEY cannot be empty. Update .env"
 
 
 async def main():
-    claude_service = Claude(model=claude_model)
+    claude_service = Gemini(model=gemini_model)
 
     server_scripts = sys.argv[1:]
     clients = {}
