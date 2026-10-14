@@ -1,9 +1,10 @@
+import time
 import uuid
 from dataclasses import dataclass
 from typing import Any
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 
 
 # chat.py / tools.py は Anthropic の Message と同じ形（.content / .stop_reason、
@@ -141,11 +142,23 @@ class Gemini:
                 thinking_budget=thinking_budget
             )
 
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=self._to_contents(messages),
-            config=config,
-        )
+        contents = self._to_contents(messages)
+        # 503(混雑)・429(レート制限)は一時的なことが多いので、待ちながら再試行する
+        for attempt in range(5):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=contents,
+                    config=config,
+                )
+                break
+            except (errors.ServerError, errors.ClientError) as e:
+                code = getattr(e, "code", None)
+                if code not in (429, 500, 503) or attempt == 4:
+                    raise
+                wait = 2 ** (attempt + 1)
+                print(f"[Gemini {code}] {wait}秒後に再試行します ({attempt + 1}/4)")
+                time.sleep(wait)
 
         candidate = response.candidates[0] if response.candidates else None
         parts = (
